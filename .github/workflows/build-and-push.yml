@@ -1,13 +1,12 @@
 # CI/CD Pipeline for Dashboard & Counting Microservices
 #
-# testing branch → Build only (verify images build correctly)
-# main branch    → Build + Push to Docker Hub
+# testing branch  → Build only (verify images build correctly)
+# pull_request    → Build only (verify before merge)
+# main branch     → Build + Push to ECR + Deploy to ECS
 
-name: Build and Push Docker Images
+name: Build and Deploy
 
-# WHEN to run this workflow
 on:
-  # Run when pushing to main OR testing branch
   push:
     branches:
       - main
@@ -15,44 +14,92 @@ on:
     paths:
       - "dashboard-counting-microservice/**"
 
-  # Also run when a Pull Request is created targeting main
   pull_request:
     branches:
       - main
     paths:
       - "dashboard-counting-microservice/**"
 
-# WHAT to do
+env:
+  AWS_REGION: ap-southeast-1
+  ECS_CLUSTER: demo-microservices
+
 jobs:
-  build-and-push:
-    name: Build and Push Images
+  # ============================================================
+  # Job 1: Build images (runs on ALL branches)
+  # ============================================================
+  build:
+    name: Build Images
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Download your code onto the GitHub runner machine
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Login to Docker Hub (only on main branch)
-      - name: Login to Docker Hub
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # Step 3: Build (and push only on main) the COUNTING image
       - name: Build counting image
-        uses: docker/build-push-action@v6
-        with:
-          context: dashboard-counting-microservice/counting
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: zinmoe8988/counting:latest
+        run: |
+          docker build -t counting:test \
+            dashboard-counting-microservice/counting/
 
-      # Step 4: Build (and push only on main) the DASHBOARD image
       - name: Build dashboard image
-        uses: docker/build-push-action@v6
+        run: |
+          docker build -t dashboard:test \
+            dashboard-counting-microservice/dashboard/
+
+  # ============================================================
+  # Job 2: Push to ECR + Deploy to ECS (only on main branch)
+  # ============================================================
+  push-and-deploy:
+    name: Push to ECR and Deploy to ECS
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          context: dashboard-counting-microservice/dashboard
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: zinmoe8988/dashboard:latest
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push counting image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $ECR_REGISTRY/counting:latest \
+            -t $ECR_REGISTRY/counting:${{ github.sha }} \
+            dashboard-counting-microservice/counting/
+          docker push $ECR_REGISTRY/counting:latest
+          docker push $ECR_REGISTRY/counting:${{ github.sha }}
+
+      - name: Build, tag, and push dashboard image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $ECR_REGISTRY/dashboard:latest \
+            -t $ECR_REGISTRY/dashboard:${{ github.sha }} \
+            dashboard-counting-microservice/dashboard/
+          docker push $ECR_REGISTRY/dashboard:latest
+          docker push $ECR_REGISTRY/dashboard:${{ github.sha }}
+
+      - name: Deploy counting service to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service counting \
+            --force-new-deployment
+
+      - name: Deploy dashboard service to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service dashboard \
+            --force-new-deployment

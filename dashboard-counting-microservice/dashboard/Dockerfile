@@ -13,7 +13,7 @@ EXPOSE 9002
 
 # Set environment variables
 ENV PORT=9002
-ENV COUNTING_SERVICE_URL=http://counting-service:9001
+ENV COUNTING_SERVICE_URL=http://counting.microservices.local:9001
 
 # Run the service
 CMD ["/app/dashboard-service"]
