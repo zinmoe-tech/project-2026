@@ -1,0 +1,46 @@
+# This workflow builds Docker images and pushes them to Docker Hub
+# It runs automatically when you push code to the main branch
+
+name: Build and Push Docker Images
+
+# WHEN to run this workflow
+on:
+  push:
+    branches:
+      - main                          # Only run when pushing to main branch
+    paths:
+      - "dashboard-counting-microservice/**"  # Only run when files in this folder change
+
+# WHAT to do
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest            # GitHub provides a free Linux machine to run this
+
+    steps:
+      # Step 1: Download your code onto the GitHub runner machine
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Login to Docker Hub using your secrets
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 3: Build and push the COUNTING image
+      - name: Build and push counting image
+        uses: docker/build-push-action@v6
+        with:
+          context: dashboard-counting-microservice/counting
+          push: true
+          tags: zinmoe8988/counting:latest
+
+      # Step 4: Build and push the DASHBOARD image
+      - name: Build and push dashboard image
+        uses: docker/build-push-action@v6
+        with:
+          context: dashboard-counting-microservice/dashboard
+          push: true
+          tags: zinmoe8988/dashboard:latest

@@ -1,0 +1,25 @@
+services:
+  counting-service:
+    container_name: counting-service
+    image: zinmoe8988/counting:latest
+    build:
+      context: ./counting
+      dockerfile: Dockerfile
+    ports:
+      - "9001:9001"
+    environment:
+      PORT: 9001
+
+  dashboard:
+    container_name: dashboard
+    image: zinmoe8988/dashboard:latest
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "9002:9002"
+    environment:
+      PORT: 9002
+      COUNTING_SERVICE_URL: "http://counting-service:9001"
+    depends_on:
+      - counting-service

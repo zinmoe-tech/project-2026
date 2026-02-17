@@ -1,0 +1,107 @@
+/*
+  Sea theme colors (light to dark)
+  #1e90ff (dodger blue)
+  #0066cc (ocean blue)
+  #004080 (deep blue)
+  #003366 (navy blue)
+  #001a33 (dark navy)
+
+  #5eb3d6 (light blue)
+
+  lightest blue #e6f3ff
+*/
+
+body {
+  background: url('ocean-bg.jpg') center center / cover no-repeat fixed;
+  background-color: #1e90ff; /* Fallback color */
+
+  min-height: 100vh;
+  margin: 0;
+  padding: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body,
+p {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+h1 {
+  color: #e6f3ff;
+  font-weight: normal;
+}
+
+#line {
+  border-bottom: 10px solid #004080;
+  width: 4em;
+}
+
+#count {
+  font-size: 15em;
+  font-weight: bold;
+  text-align: right;
+  color: #fff;
+}
+
+#hostname {
+  color: #e6f3ff;
+  text-align: right;
+  font-family: monospace;
+}
+
+.dashboard-info {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 2px solid #5eb3d6;
+}
+
+#dashboard-hostname,
+#dashboard-ip,
+#container-id,
+#image-name {
+  color: #e6f3ff;
+  text-align: right;
+  font-family: monospace;
+  font-size: 1.1em;
+  margin: 0.3em 0;
+}
+
+#connection-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  font-weight: bold;
+  color: white;
+  border-radius: 0.2em;
+  padding: 0.2em 0.5em;
+  text-align: right;
+  background-color: red;
+}
+
+.connected {
+  background-color: green !important;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 700px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3em;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+@media only screen and (max-width: 700px) {
+  body {
+    padding: 10px;
+  }
+  h1 {
+    font-size: 1.5em;
+  }
+  #count {
+    font-size: 8em;
+  }
+}
