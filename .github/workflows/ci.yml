@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-page:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify index.html contains expected text
+        run: |
+          if ! grep -q "Hello" index.html; then
+            echo "index.html does not contain the expected text 'Hello'" >&2
+            exit 1
+          fi
