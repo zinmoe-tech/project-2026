@@ -13,7 +13,7 @@ def client():
 def test_index_html(client):
     resp = client.get('/')
     assert resp.status_code == 200
-    assert b"Hello" in resp.data
+    assert b"Hi" in resp.data
 
 
 def test_health(client):
