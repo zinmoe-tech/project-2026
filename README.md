@@ -23,8 +23,10 @@ git push -u origin main
 What the workflow does
 
 - Runs on `push` and `pull_request`.
-- Checks out the repository and verifies `index.html` contains the text `Hello`.
+- Checks out the repository and verifies `index.html` contains the text `Hi`.
 
 Next steps
 
 - If you'd like, I can initialize the git repo here for you and push a branch (you'll need to confirm the remote and credentials), or you can push from your machine.
+
+Trigger Build-and-Deploy: 2026-04-17T11:19:35Z
